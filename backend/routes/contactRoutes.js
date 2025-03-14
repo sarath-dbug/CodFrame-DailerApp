@@ -1,12 +1,21 @@
-const express = require('express');
-const upload = require('../utils/upload');
-const { createContact, uploadContactsFromCSV } = require('../controllers/contactController');
-const authMiddleware = require('../middleware/authMiddleware');
+const express = require("express");
+const upload = require("../utils/upload");
+const {
+  createContact,
+  uploadContactsFromCSV,
+  getAllContacts,
+  getAllListContacts,
+} = require("../controllers/contactController");
+const authMiddleware = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
-router.post('/addContact', authMiddleware, createContact);
+router.post("/addContact", authMiddleware, createContact);
 
 router.post('/addContacts-csv', authMiddleware, upload.single('file'), uploadContactsFromCSV);
 
-module.exports = router; 
+router.get("/fetchAllContacts", getAllContacts);
+
+router.get("/fetchAllListContacts", getAllListContacts);
+
+module.exports = router;

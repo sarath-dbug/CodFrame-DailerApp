@@ -18,6 +18,18 @@ const contactSchema = new mongoose.Schema({
     type: String, 
     default: '' 
   },
+  email: { 
+    type: String, 
+    default: '' 
+  },
+  dealValue: { 
+    type: Number, 
+    default: 0 
+  },
+  leadScore: { 
+    type: Number, 
+    default: 0 
+  },
   disposition: { 
     type: String, 
     enum: ['NEW', 'CONTACTED', 'FOLLOW_UP', 'COMPLETED', 'MISSED'], 

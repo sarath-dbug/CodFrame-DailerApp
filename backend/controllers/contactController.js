@@ -11,6 +11,9 @@ const createContact = async (req, res) => {
     secondaryNumber,
     name,
     companyName,
+    email,
+    dealValue,
+    leadScore,
     disposition,
     address,
     extra,
@@ -19,17 +22,22 @@ const createContact = async (req, res) => {
   } = req.body;
 
   try {
+    // Check if the contact already exists
     const existingContact = await Contact.findOne({ number });
     if (existingContact) {
       return res.status(400).json({ msg: 'Contact with this number already exists' });
     }
 
+    // Create a new contact
     const newContact = new Contact({
       number,
       secondaryNumber,
       name,
       companyName,
-      disposition: disposition || 'NEW', // Default to 'NEW' if not provided
+      email: email || '', 
+      dealValue: dealValue || 0, 
+      leadScore: leadScore || 0, 
+      disposition: disposition || 'NEW',
       address,
       extra,
       remarks,
@@ -49,12 +57,11 @@ const createContact = async (req, res) => {
 
 // Upload contacts from CSV
 const uploadContactsFromCSV = async (req, res) => {
-
   if (!req.file) {
     return res.status(400).json({ msg: 'No file uploaded' });
   }
 
-  const { listId } = req.body;
+  const { listId } = req.body; 
   if (!listId) {
     return res.status(400).json({ msg: 'List ID is required' });
   }
@@ -74,12 +81,15 @@ const uploadContactsFromCSV = async (req, res) => {
             secondaryNumber: row.secondaryNumber || '',
             name: row.name,
             companyName: row.companyName || '',
+            email: row.email || '',
+            dealValue: row.dealValue ? parseFloat(row.dealValue) : 0,
+            leadScore: row.leadScore ? parseInt(row.leadScore) : 0, 
             disposition: row.disposition || 'NEW',
             address: row.address || '',
             extra: row.extra || '',
             remarks: row.remarks || '',
             note: row.note || '',
-            list: listId,
+            list: listId, 
           };
           contacts.push(contact);
         })
@@ -100,12 +110,15 @@ const uploadContactsFromCSV = async (req, res) => {
           secondaryNumber: row.secondaryNumber || '',
           name: row.name,
           companyName: row.companyName || '',
+          email: row.email || '', 
+          dealValue: row.dealValue ? parseFloat(row.dealValue) : 0, 
+          leadScore: row.leadScore ? parseInt(row.leadScore) : 0, 
           disposition: row.disposition || 'NEW',
           address: row.address || '',
           extra: row.extra || '',
           remarks: row.remarks || '',
           note: row.note || '',
-          list: listId,
+          list: listId, 
         };
         contacts.push(contact);
       });
@@ -127,8 +140,41 @@ const uploadContactsFromCSV = async (req, res) => {
 };
 
 
+// Fetch all contacts
+const getAllContacts = async (req, res) => {
+  try {
+    const contacts = await Contact.find().populate('list', 'name'); // Populate the list field with the list name
+    res.status(200).json(contacts);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: 'Server error', error: err.message });
+  }
+};
+
+
+// Fetch all list contacts
+const getAllListContacts = async (req, res) => {
+  const { listId } = req.query; 
+
+  try {
+    let query = {};
+    if (listId) {
+      query.list = listId; // Filter by listId if provided
+    }
+
+    const contacts = await Contact.find(query).populate('list', 'name');
+    res.status(200).json(contacts);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: 'Server error', error: err.message });
+  }
+};
+
+
 
 module.exports = {
   createContact,
-  uploadContactsFromCSV
+  uploadContactsFromCSV,
+  getAllContacts,
+  getAllListContacts
 }
