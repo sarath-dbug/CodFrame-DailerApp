@@ -52,6 +52,11 @@ const contactSchema = new mongoose.Schema({
     type: String, 
     enum: ['PENDING', 'COMPLETED', 'MISSED'], 
     default: 'PENDING' 
+  },
+  list: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'List', 
+    default: null 
   }
 });
 

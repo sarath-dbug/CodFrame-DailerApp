@@ -49,9 +49,14 @@ const createContact = async (req, res) => {
 
 // Upload contacts from CSV
 const uploadContactsFromCSV = async (req, res) => {
-    
+
   if (!req.file) {
     return res.status(400).json({ msg: 'No file uploaded' });
+  }
+
+  const { listId } = req.body;
+  if (!listId) {
+    return res.status(400).json({ msg: 'List ID is required' });
   }
 
   const contacts = [];
@@ -74,6 +79,7 @@ const uploadContactsFromCSV = async (req, res) => {
             extra: row.extra || '',
             remarks: row.remarks || '',
             note: row.note || '',
+            list: listId,
           };
           contacts.push(contact);
         })
@@ -99,6 +105,7 @@ const uploadContactsFromCSV = async (req, res) => {
           extra: row.extra || '',
           remarks: row.remarks || '',
           note: row.note || '',
+          list: listId,
         };
         contacts.push(contact);
       });
@@ -122,6 +129,6 @@ const uploadContactsFromCSV = async (req, res) => {
 
 
 module.exports = {
-    createContact,
-    uploadContactsFromCSV
+  createContact,
+  uploadContactsFromCSV
 }
