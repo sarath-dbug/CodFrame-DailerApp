@@ -5,6 +5,8 @@ const {
   uploadContactsFromCSV,
   getAllContacts,
   getAllListContacts,
+  exportContactsByList,
+  exportAllContacts
 } = require("../controllers/contactController");
 const authMiddleware = require("../middleware/authMiddleware");
 
@@ -17,5 +19,9 @@ router.post('/addContacts-csv', authMiddleware, upload.single('file'), uploadCon
 router.get("/fetchAllContacts", getAllContacts);
 
 router.get("/fetchAllListContacts", getAllListContacts);
+
+router.get('/exportContactsByList/:id', exportContactsByList);
+
+router.get('/exportAllContacts', exportAllContacts);
 
 module.exports = router;

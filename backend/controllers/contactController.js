@@ -3,6 +3,8 @@ const fs = require('fs');
 const csv = require('csv-parser');
 const xlsx = require('xlsx');
 const path = require('path');
+const List = require('../models/List');
+const json2csv = require('json2csv').parse;
 
 // Upload contacts
 const createContact = async (req, res) => {
@@ -171,10 +173,140 @@ const getAllListContacts = async (req, res) => {
 };
 
 
+const exportContactsByList = async (req, res) => {
+  try {
+    const listId = req.params.id;
+
+    const list = await List.findById(listId);
+    if (!list) {
+      return res.status(404).json({ msg: 'List not found' });
+    }
+
+    const contacts = await Contact.find({ list: listId });
+
+    if (contacts.length === 0) {
+      return res.status(404).json({ msg: 'No contacts found for this list' });
+    }
+
+    // Create CSV JSON data
+    const csvData = contacts.map((contact) => ({
+      number: contact.number,
+      secondaryNumber: contact.secondaryNumber,
+      name: contact.name,
+      companyName: contact.companyName,
+      email: contact.email,
+      dealValue: contact.dealValue,
+      leadScore: contact.leadScore,
+      disposition: contact.disposition,
+      address: contact.address,
+      extra: contact.extra,
+      remarks: contact.remarks,
+      note: contact.note,
+      createdOn: contact.createdOn.toISOString(),
+      status: contact.status,
+    }));
+
+    // Convert JSON data to CSV
+    const csv = json2csv(csvData, {
+      fields: [
+        'number',
+        'secondaryNumber',
+        'name',
+        'companyName',
+        'email',
+        'dealValue',
+        'leadScore',
+        'disposition',
+        'address',
+        'extra',
+        'remarks',
+        'note',
+        'createdOn',
+        'status',
+      ],
+    });
+
+    // Set headers for file download
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename=${list.name}_contacts.csv`);
+
+    // Send the CSV file as a response
+    res.status(200).send(csv);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: 'Server error', error: err.message });
+  }
+};
+
+
+const exportAllContacts = async (req, res) => {
+  try {
+    // Step 1: Fetch all contacts
+    const contacts = await Contact.find();
+
+    if (contacts.length === 0) {
+      return res.status(404).json({ msg: 'No contacts found' });
+    }
+
+    // Step 2: Create CSV data
+    const csvData = contacts.map((contact) => ({
+      number: contact.number,
+      secondaryNumber: contact.secondaryNumber,
+      name: contact.name,
+      companyName: contact.companyName,
+      email: contact.email,
+      dealValue: contact.dealValue,
+      leadScore: contact.leadScore,
+      disposition: contact.disposition,
+      address: contact.address,
+      extra: contact.extra,
+      remarks: contact.remarks,
+      note: contact.note,
+      createdOn: contact.createdOn.toISOString(),
+      status: contact.status,
+      list: contact.list ? contact.list.toString() : '', // Convert ObjectId to string
+    }));
+
+    // Step 3: Convert JSON to CSV
+    const json2csv = require('json2csv').parse;
+    const csv = json2csv(csvData, {
+      fields: [
+        'number',
+        'secondaryNumber',
+        'name',
+        'companyName',
+        'email',
+        'dealValue',
+        'leadScore',
+        'disposition',
+        'address',
+        'extra',
+        'remarks',
+        'note',
+        'createdOn',
+        'status',
+        'list',
+      ],
+    });
+
+    // Step 4: Set headers for file download
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename=all_contacts.csv');
+
+    // Step 5: Send the CSV file as a response
+    res.status(200).send(csv);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: 'Server error', error: err.message });
+  }
+};
+
 
 module.exports = {
   createContact,
   uploadContactsFromCSV,
   getAllContacts,
-  getAllListContacts
+  getAllListContacts,
+  exportContactsByList,
+  exportAllContacts
 }

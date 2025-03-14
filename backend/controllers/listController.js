@@ -1,6 +1,6 @@
 const List = require('../models/List');
 const Contact = require('../models/Contact');
-
+const json2csv = require('json2csv').parse;
 
 // Create a new list
 const createList = async (req, res) => {
@@ -114,7 +114,7 @@ const emptyList = async (req, res) => {
       res.status(500).json({ msg: 'Server error', error: err.message });
     }
   };
-  
+
 
 
 module.exports = {
@@ -123,5 +123,5 @@ module.exports = {
     getListById,
     updateList,
     deleteList,
-    emptyList
+    emptyList,
 }
