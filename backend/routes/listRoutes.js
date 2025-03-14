@@ -5,6 +5,7 @@ const {
     getListById,
     updateList,
     deleteList,
+    emptyList
 } = require('../controllers/listController');
 const authMiddleware = require('../middleware/authMiddleware');
 
@@ -19,5 +20,7 @@ router.get('/fetchSingleList/:id', getListById);
 router.put('/updateList/:id', authMiddleware, updateList);
 
 router.delete('/deleteList/:id', authMiddleware, deleteList);
+
+router.delete('/emptyList/:id', authMiddleware, emptyList);
 
 module.exports = router;

@@ -1,4 +1,5 @@
 const List = require('../models/List');
+const Contact = require('../models/Contact');
 
 
 // Create a new list
@@ -74,22 +75,46 @@ const updateList = async (req, res) => {
 };
 
 
-// Delete a list by ID
+// Delete a list and all the contacts associated with it
 const deleteList = async (req, res) => {
     try {
-        const list = await List.findByIdAndDelete(req.params.id);
-        
-        if (!list) {
-            return res.status(404).json({ msg: 'List not found' });
-        }
-
-        res.status(200).json({ msg: 'List deleted successfully' });
+      const listId = req.params.id;
+  
+      // Step 1: Delete the list
+      const list = await List.findByIdAndDelete(listId);
+      if (!list) {
+        return res.status(404).json({ msg: 'List not found' });
+      }
+  
+      await Contact.deleteMany({ list: listId });
+  
+      res.status(200).json({ msg: 'List and associated contacts deleted successfully' });
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ msg: 'Server error', error: err.message });
+      console.error(err);
+      res.status(500).json({ msg: 'Server error', error: err.message });
     }
 };
 
+
+// Delete all contacts associated with the list
+const emptyList = async (req, res) => {
+    try {
+      const listId = req.params.id;
+  
+      const list = await List.findById(listId);
+      if (!list) {
+        return res.status(404).json({ msg: 'List not found' });
+      }
+  
+      await Contact.deleteMany({ list: listId });
+  
+      res.status(200).json({ msg: 'All contacts in the list have been deleted', list });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ msg: 'Server error', error: err.message });
+    }
+  };
+  
 
 
 module.exports = {
@@ -97,5 +122,6 @@ module.exports = {
     getAllLists,
     getListById,
     updateList,
-    deleteList
+    deleteList,
+    emptyList
 }
