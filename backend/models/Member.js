@@ -30,9 +30,8 @@ const memberSchema = new mongoose.Schema({
         enum: ['team manager', 'sub manager', 'agent'],
     },
     team: {
-        type: String,
+        type: [String],
         required: true,
-        trim: true,
     },
     phone: {
         type: String,
@@ -46,6 +45,15 @@ const memberSchema = new mongoose.Schema({
     updatedAt: {
         type: Date,
         default: Date.now,
+    },
+});
+
+
+// Exclude password from responses
+memberSchema.set('toJSON', {
+    transform: (doc, ret) => {
+        delete ret.password;
+        return ret;
     },
 });
 
