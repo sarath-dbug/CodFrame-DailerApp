@@ -6,7 +6,8 @@ const {
   getAllContacts,
   getAllListContacts,
   exportContactsByList,
-  exportAllContacts
+  exportAllContacts,
+  assignContactsFromListToMember
 } = require("../controllers/contactController");
 const authMiddleware = require("../middleware/authMiddleware");
 
@@ -23,5 +24,7 @@ router.get("/fetchAllListContacts", getAllListContacts);
 router.get('/exportContactsByList/:id', exportContactsByList);
 
 router.get('/exportAllContacts', exportAllContacts);
+
+router.post('/assignContactsFromList', authMiddleware, assignContactsFromListToMember);
 
 module.exports = router;

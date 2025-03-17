@@ -1,5 +1,6 @@
 const Member = require('../models/Member');
 const bcrypt = require('bcrypt');
+const { Parser } = require('json2csv'); 
 
 
 // Create a member
@@ -154,11 +155,46 @@ const updateMember = async (req, res) => {
 
 
 
+const exportMembers = async (req, res) => {
+    try {
+      const members = await Member.find()
+  
+      if (members.length === 0) {
+        return res.status(404).json({ msg: 'No members found' });
+      }
+  
+      const fields = [
+        'name',
+        'email',
+        'userId',
+        'role',
+        'team',
+        'phone',
+        'createdAt',
+        'updatedAt',
+      ];
+  
+      const json2csvParser = new Parser({ fields });
+      const csv = json2csvParser.parse(members);
+  
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', 'attachment; filename=members.csv');
+  
+      res.status(200).send(csv);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ msg: 'Server error', error: err.message });
+    }
+  };
+
+
+
 module.exports = {
     createMember,
     getAllMembers,
     changePassword,
     deleteMember,
     deleteAllMembers,
-    updateMember
+    updateMember,
+    exportMembers
 }

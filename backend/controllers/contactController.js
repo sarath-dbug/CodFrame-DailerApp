@@ -1,9 +1,10 @@
 const Contact = require('../models/Contact');
+const List = require('../models/List');
+const Member = require('../models/Member');
 const fs = require('fs');
 const csv = require('csv-parser');
 const xlsx = require('xlsx');
 const path = require('path');
-const List = require('../models/List');
 const json2csv = require('json2csv').parse;
 
 // Upload contacts
@@ -173,6 +174,7 @@ const getAllListContacts = async (req, res) => {
 };
 
 
+// Export Contacts ByList
 const exportContactsByList = async (req, res) => {
   try {
     const listId = req.params.id;
@@ -239,6 +241,7 @@ const exportContactsByList = async (req, res) => {
 };
 
 
+// Export All Contacts
 const exportAllContacts = async (req, res) => {
   try {
     // Step 1: Fetch all contacts
@@ -302,11 +305,52 @@ const exportAllContacts = async (req, res) => {
 };
 
 
+// Assign Contacts from a List to a Member
+const assignContactsFromListToMember = async (req, res) => {
+  try {
+      const { memberId, listId } = req.body;
+
+      if (!memberId || !listId) {
+          return res.status(400).json({ msg: 'Member ID and List ID are required' });
+      }
+
+      const member = await Member.findById(memberId);
+      if (!member) {
+          return res.status(404).json({ msg: 'Member not found' });
+      }
+
+      const list = await List.findById(listId);
+      if (!list) {
+          return res.status(404).json({ msg: 'List not found' });
+      }
+
+      const contacts = await Contact.find({ list: listId });
+      if (contacts.length === 0) {
+          return res.status(400).json({ msg: 'No contacts found in the list' });
+      }
+
+      await Contact.updateMany(
+          { list: listId },
+          { assignedTo: memberId }
+      );
+
+      res.status(200).json({ 
+          msg: 'Contacts assigned successfully', 
+          assignedContacts: contacts.length 
+      });
+  } catch (err) {
+      console.error(err);
+      res.status(500).json({ msg: 'Server error', error: err.message });
+  }
+};
+
+
 module.exports = {
   createContact,
   uploadContactsFromCSV,
   getAllContacts,
   getAllListContacts,
   exportContactsByList,
-  exportAllContacts
+  exportAllContacts,
+  assignContactsFromListToMember
 }
