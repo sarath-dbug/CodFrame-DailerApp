@@ -10,6 +10,11 @@ const listSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  assignedTo: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Member',
+    default: null,
+  },
   updatedAt: {
     type: Date,
     default: Date.now,

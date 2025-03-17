@@ -37,9 +37,9 @@ const createContact = async (req, res) => {
       secondaryNumber,
       name,
       companyName,
-      email: email || '', 
-      dealValue: dealValue || 0, 
-      leadScore: leadScore || 0, 
+      email: email || '',
+      dealValue: dealValue || 0,
+      leadScore: leadScore || 0,
       disposition: disposition || 'NEW',
       address,
       extra,
@@ -64,7 +64,7 @@ const uploadContactsFromCSV = async (req, res) => {
     return res.status(400).json({ msg: 'No file uploaded' });
   }
 
-  const { listId } = req.body; 
+  const { listId } = req.body;
   if (!listId) {
     return res.status(400).json({ msg: 'List ID is required' });
   }
@@ -86,13 +86,13 @@ const uploadContactsFromCSV = async (req, res) => {
             companyName: row.companyName || '',
             email: row.email || '',
             dealValue: row.dealValue ? parseFloat(row.dealValue) : 0,
-            leadScore: row.leadScore ? parseInt(row.leadScore) : 0, 
+            leadScore: row.leadScore ? parseInt(row.leadScore) : 0,
             disposition: row.disposition || 'NEW',
             address: row.address || '',
             extra: row.extra || '',
             remarks: row.remarks || '',
             note: row.note || '',
-            list: listId, 
+            list: listId,
           };
           contacts.push(contact);
         })
@@ -113,15 +113,15 @@ const uploadContactsFromCSV = async (req, res) => {
           secondaryNumber: row.secondaryNumber || '',
           name: row.name,
           companyName: row.companyName || '',
-          email: row.email || '', 
-          dealValue: row.dealValue ? parseFloat(row.dealValue) : 0, 
-          leadScore: row.leadScore ? parseInt(row.leadScore) : 0, 
+          email: row.email || '',
+          dealValue: row.dealValue ? parseFloat(row.dealValue) : 0,
+          leadScore: row.leadScore ? parseInt(row.leadScore) : 0,
           disposition: row.disposition || 'NEW',
           address: row.address || '',
           extra: row.extra || '',
           remarks: row.remarks || '',
           note: row.note || '',
-          list: listId, 
+          list: listId,
         };
         contacts.push(contact);
       });
@@ -157,7 +157,7 @@ const getAllContacts = async (req, res) => {
 
 // Fetch all list contacts
 const getAllListContacts = async (req, res) => {
-  const { listId } = req.query; 
+  const { listId } = req.query;
 
   try {
     let query = {};
@@ -308,39 +308,44 @@ const exportAllContacts = async (req, res) => {
 // Assign Contacts from a List to a Member
 const assignContactsFromListToMember = async (req, res) => {
   try {
-      const { memberId, listId } = req.body;
+    const { memberId, listId } = req.body;
 
-      if (!memberId || !listId) {
-          return res.status(400).json({ msg: 'Member ID and List ID are required' });
-      }
+    if (!memberId || !listId) {
+      return res.status(400).json({ msg: 'Member ID and List ID are required' });
+    }
 
-      const member = await Member.findById(memberId);
-      if (!member) {
-          return res.status(404).json({ msg: 'Member not found' });
-      }
+    const member = await Member.findById(memberId);
+    if (!member) {
+      return res.status(404).json({ msg: 'Member not found' });
+    }
 
-      const list = await List.findById(listId);
-      if (!list) {
-          return res.status(404).json({ msg: 'List not found' });
-      }
+    const list = await List.findById(listId);
+    if (!list) {
+      return res.status(404).json({ msg: 'List not found' });
+    }
 
-      const contacts = await Contact.find({ list: listId });
-      if (contacts.length === 0) {
-          return res.status(400).json({ msg: 'No contacts found in the list' });
-      }
+    const contacts = await Contact.find({ list: listId });
+    if (contacts.length === 0) {
+      return res.status(400).json({ msg: 'No contacts found in the list' });
+    }
 
-      await Contact.updateMany(
-          { list: listId },
-          { assignedTo: memberId }
-      );
+    // Update the assignedTo field in the List document
+    list.assignedTo = memberId;
+    await list.save();
 
-      res.status(200).json({ 
-          msg: 'Contacts assigned successfully', 
-          assignedContacts: contacts.length 
-      });
+    // Update the assignedTo field for all contacts in the list
+    await Contact.updateMany(
+      { list: listId },
+      { assignedTo: memberId }
+    );
+
+    res.status(200).json({
+      msg: 'Contacts assigned successfully',
+      assignedContacts: contacts.length
+    });
   } catch (err) {
-      console.error(err);
-      res.status(500).json({ msg: 'Server error', error: err.message });
+    console.error(err);
+    res.status(500).json({ msg: 'Server error', error: err.message });
   }
 };
 

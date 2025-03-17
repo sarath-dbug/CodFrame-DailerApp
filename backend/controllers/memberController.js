@@ -1,27 +1,33 @@
 const Member = require('../models/Member');
+const List = require('../models/List');
+const Team = require('../models/Team');
 const bcrypt = require('bcrypt');
 const { Parser } = require('json2csv'); 
 
 
 // Create a member
 const createMember = async (req, res) => {
-    const { name, email, userId, password, role, team, phone } = req.body;
+    let { name, email, userId, password, role, team, phone } = req.body;
 
     try {
+        // Check if the member already exists
         const existingMember = await Member.findOne({ email });
         if (existingMember) {
             return res.status(400).json({ msg: 'Member with this email already exists' });
         }
 
+        // Ensure team is an array
+        if (typeof team === 'string') {
+            team = [team]; // Convert single string to an array
+        }
+
         if (!Array.isArray(team)) {
-            return res.status(400).json({ msg: 'Team must be an array' });
+            return res.status(400).json({ msg: 'Team must be an array or string' });
         }
 
-        const formattedTeam = team.map((teamName) => teamName.trim())
-        if (formattedTeam.length === 0) {
-            return res.status(400).json({ msg: 'At least one team is required' });
-        }
+        const formattedTeam = team.map((teamName) => teamName.trim());
 
+        // Create a new member
         const newMember = new Member({
             name,
             email,
@@ -34,7 +40,23 @@ const createMember = async (req, res) => {
 
         await newMember.save();
 
-        res.status(201).json({ msg: 'Member created successfully', member: newMember.toJSON() });
+        // Update assignedTo in Team model
+        for (const teamName of formattedTeam) {
+            const teamDoc = await Team.findOneAndUpdate(
+                { name: teamName },
+                { 
+                    $addToSet: { assignedTo: newMember._id }, // Add member ID if not already present
+                    updatedAt: new Date() // Update timestamp
+                },
+                { new: true } // Return the updated document
+            );
+
+            if (!teamDoc) {
+                console.warn(`Team '${teamName}' not found. Member added without team assignment.`);
+            }
+        }
+
+        res.status(201).json({ msg: 'Member created successfully', member: newMember });
     } catch (err) {
         console.error(err);
         res.status(500).json({ msg: 'Server error', error: err.message });
@@ -185,8 +207,26 @@ const exportMembers = async (req, res) => {
       console.error(err);
       res.status(500).json({ msg: 'Server error', error: err.message });
     }
-  };
+};
 
+
+const getListsByMember = async (req, res) => {
+    const { memberId } = req.params;
+  
+    try {
+      const member = await Member.findById(memberId);
+      if (!member) {
+        return res.status(404).json({ msg: 'Member not found' });
+      }
+  
+      const lists = await List.find({ assignedTo: memberId });
+  
+      res.status(200).json(lists);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ msg: 'Server error', error: err.message });
+    }
+};
 
 
 module.exports = {
@@ -196,5 +236,6 @@ module.exports = {
     deleteMember,
     deleteAllMembers,
     updateMember,
-    exportMembers
+    exportMembers,
+    getListsByMember
 }

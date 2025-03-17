@@ -78,20 +78,20 @@ const updateList = async (req, res) => {
 // Delete a list and all the contacts associated with it
 const deleteList = async (req, res) => {
     try {
-      const listId = req.params.id;
-  
-      // Step 1: Delete the list
-      const list = await List.findByIdAndDelete(listId);
-      if (!list) {
-        return res.status(404).json({ msg: 'List not found' });
-      }
-  
-      await Contact.deleteMany({ list: listId });
-  
-      res.status(200).json({ msg: 'List and associated contacts deleted successfully' });
+        const listId = req.params.id;
+
+        // Step 1: Delete the list
+        const list = await List.findByIdAndDelete(listId);
+        if (!list) {
+            return res.status(404).json({ msg: 'List not found' });
+        }
+
+        await Contact.deleteMany({ list: listId });
+
+        res.status(200).json({ msg: 'List and associated contacts deleted successfully' });
     } catch (err) {
-      console.error(err);
-      res.status(500).json({ msg: 'Server error', error: err.message });
+        console.error(err);
+        res.status(500).json({ msg: 'Server error', error: err.message });
     }
 };
 
@@ -99,21 +99,21 @@ const deleteList = async (req, res) => {
 // Delete all contacts associated with the list
 const emptyList = async (req, res) => {
     try {
-      const listId = req.params.id;
-  
-      const list = await List.findById(listId);
-      if (!list) {
-        return res.status(404).json({ msg: 'List not found' });
-      }
-  
-      await Contact.deleteMany({ list: listId });
-  
-      res.status(200).json({ msg: 'All contacts in the list have been deleted', list });
+        const listId = req.params.id;
+
+        const list = await List.findById(listId);
+        if (!list) {
+            return res.status(404).json({ msg: 'List not found' });
+        }
+
+        await Contact.deleteMany({ list: listId });
+
+        res.status(200).json({ msg: 'All contacts in the list have been deleted', list });
     } catch (err) {
-      console.error(err);
-      res.status(500).json({ msg: 'Server error', error: err.message });
+        console.error(err);
+        res.status(500).json({ msg: 'Server error', error: err.message });
     }
-  };
+};
 
 
 
