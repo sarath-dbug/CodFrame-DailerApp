@@ -1,7 +1,7 @@
 const Member = require('../models/Member');
 const List = require('../models/List');
 const Team = require('../models/Team');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const { Parser } = require('json2csv'); 
 
 
