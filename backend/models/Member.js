@@ -30,7 +30,8 @@ const memberSchema = new mongoose.Schema({
         enum: ['team manager', 'sub manager', 'agent'],
     },
     team: {
-        type: [String],
+        type: [mongoose.Schema.Types.ObjectId],
+        ref: 'Team',
         required: true,
     },
     phone: {

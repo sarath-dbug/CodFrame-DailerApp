@@ -25,7 +25,15 @@ const createMember = async (req, res) => {
             return res.status(400).json({ msg: 'Team must be an array or string' });
         }
 
-        const formattedTeam = team.map((teamName) => teamName.trim());
+        // Find team IDs based on team names
+        const teamIds = [];
+        for (const teamName of team) {
+            const teamDoc = await Team.findOne({ name: teamName.trim() });
+            if (!teamDoc) {
+                return res.status(400).json({ msg: `Team '${teamName}' not found` });
+            }
+            teamIds.push(teamDoc._id);
+        }
 
         // Create a new member
         const newMember = new Member({
@@ -34,26 +42,22 @@ const createMember = async (req, res) => {
             userId,
             password,
             role,
-            team: formattedTeam,
+            team: teamIds, // Store team IDs instead of team names
             phone,
         });
 
         await newMember.save();
 
         // Update assignedTo in Team model
-        for (const teamName of formattedTeam) {
-            const teamDoc = await Team.findOneAndUpdate(
-                { name: teamName },
+        for (const teamId of teamIds) {
+            await Team.findByIdAndUpdate(
+                teamId,
                 { 
                     $addToSet: { assignedTo: newMember._id }, // Add member ID if not already present
                     updatedAt: new Date() // Update timestamp
                 },
                 { new: true } // Return the updated document
             );
-
-            if (!teamDoc) {
-                console.warn(`Team '${teamName}' not found. Member added without team assignment.`);
-            }
         }
 
         res.status(201).json({ msg: 'Member created successfully', member: newMember });

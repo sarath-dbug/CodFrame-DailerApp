@@ -1,10 +1,11 @@
 const List = require('../models/List');
 const Contact = require('../models/Contact');
+const Team = require('../models/Team');
 const json2csv = require('json2csv').parse;
 
 // Create a new list
 const createList = async (req, res) => {
-    const { name } = req.body;
+    const { name, teamId  } = req.body;
 
     try {
         const exitingList = await List.findOne({ name });
@@ -12,8 +13,16 @@ const createList = async (req, res) => {
             return res.status(400).json({ msg: "List with this name already exists" });
         }
 
+        const team = await Team.findById(teamId);
+        if (!team) {
+          return res.status(404).json({ msg: 'Team not found' });
+        }
+
         const newList = new List({ name });
         await newList.save();
+
+        team.lists.push(newList._id);
+        await team.save();
 
         res.status(201).json({ msg: 'List created successfully', list: newList });
     } catch (err) {

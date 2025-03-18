@@ -12,6 +12,13 @@ const teamSchema = new mongoose.Schema({
         ref: 'Member',
         default: []
     }],
+    lists: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'List',
+            default: [],
+        },
+    ],
     createdAt: {
         type: Date,
         default: Date.now
