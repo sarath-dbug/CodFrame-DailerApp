@@ -26,6 +26,11 @@ app.use('/api/lists', listRoutes);
 app.use('/api/member', memberRoutes);
 app.use('/api/team', teamRouter);
 
+
+app.get('/', (req,res)=>{
+    res.send("WELCOME TO BACKEND");
+});
+
 // Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
