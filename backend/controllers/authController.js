@@ -17,10 +17,22 @@ const registerUser = async (req, res) => {
 
         await user.save();
 
-        const payload = { user: { id: user.id } }; 
+        const payload = { user: { id: user.id } };
+
         jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' }, (err, token) => {
             if (err) throw err;
-            res.json({ token });
+
+            const userData = {
+                id: user.id,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                companyName: user.companyName,
+                email: user.email,
+                createdAt: user.createdAt,
+                updatedAt: user.updatedAt,
+            };
+
+            res.json({ token, user: userData });
         });
     } catch (err) {
         console.error(err.message);
@@ -39,10 +51,22 @@ const loginUser = async (req, res) => {
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) return res.status(400).json({ msg: 'Invalid credentials' });
 
-        const payload = { user: { id: user.id } }; 
+        const payload = { user: { id: user.id } };
+
         jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1d' }, (err, token) => {
             if (err) throw err;
-            res.json({ token });
+
+            const userData = {
+                id: user.id,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                companyName: user.companyName,
+                email: user.email,
+                createdAt: user.createdAt,
+                updatedAt: user.updatedAt,
+            };
+
+            res.json({ token, user: userData });
         });
     } catch (err) {
         console.error(err.message);
