@@ -6,6 +6,7 @@ const csv = require('csv-parser');
 const xlsx = require('xlsx');
 const path = require('path');
 const json2csv = require('json2csv').parse;
+const { parsePhoneNumberFromString } = require('libphonenumber-js');
 
 // Upload contacts
 const createContact = async (req, res) => {
@@ -64,7 +65,7 @@ const uploadContactsFromCSV = async (req, res) => {
     return res.status(400).json({ msg: 'No file uploaded' });
   }
 
-  const { listId } = req.body;
+  const { listId, countryCode = 'IN' } = req.body; // Default country code is 'IN' (India)
   if (!listId) {
     return res.status(400).json({ msg: 'List ID is required' });
   }
@@ -80,8 +81,8 @@ const uploadContactsFromCSV = async (req, res) => {
         .pipe(csv())
         .on('data', (row) => {
           const contact = {
-            number: row.number,
-            secondaryNumber: row.secondaryNumber || '',
+            number: formatPhoneNumber(row.number, countryCode), // Add country code
+            secondaryNumber: formatPhoneNumber(row.secondaryNumber || '', countryCode), // Add country code
             name: row.name,
             companyName: row.companyName || '',
             email: row.email || '',
@@ -109,8 +110,8 @@ const uploadContactsFromCSV = async (req, res) => {
 
       rows.forEach((row) => {
         const contact = {
-          number: row.number,
-          secondaryNumber: row.secondaryNumber || '',
+          number: formatPhoneNumber(row.number, countryCode),
+          secondaryNumber: formatPhoneNumber(row.secondaryNumber || '', countryCode), 
           name: row.name,
           companyName: row.companyName || '',
           email: row.email || '',
@@ -141,6 +142,23 @@ const uploadContactsFromCSV = async (req, res) => {
     }
   }
 };
+
+// Helper function to format phone numbers with country code
+const formatPhoneNumber = (phoneNumber, countryCode) => {
+  if (!phoneNumber) return ''; 
+
+  // Parse the phone number
+  const parsedNumber = parsePhoneNumberFromString(phoneNumber, countryCode);
+
+  // If the phone number is valid, format it with the country code
+  if (parsedNumber && parsedNumber.isValid()) {
+    return parsedNumber.formatInternational(); // Format as international number
+  }
+
+  return phoneNumber;
+};
+
+
 
 
 // Fetch all contacts
