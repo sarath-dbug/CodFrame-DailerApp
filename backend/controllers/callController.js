@@ -57,4 +57,29 @@ const storeCallResponse = async (req, res) => {
   }
 };
 
-module.exports = { storeCallResponse };
+
+// Fetching all call responses
+const getAllCallResponses = async (req, res) => {
+  try {
+    const callResponses = await Call.find();
+
+    res.status(200).json({
+      success: true,
+      message: 'Call responses fetched successfully',
+      data: callResponses,
+    });
+  } catch (error) {
+    console.error('Error fetching call responses:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch call responses',
+      error: error.message,
+    });
+  }
+};
+
+
+module.exports = { 
+  storeCallResponse,
+  getAllCallResponses
+};
