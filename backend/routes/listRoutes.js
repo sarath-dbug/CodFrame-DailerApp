@@ -3,6 +3,7 @@ const {
     createList,
     getAllLists,
     getListById,
+    getListsByTeam,
     updateList,
     deleteList,
     emptyList,
@@ -16,6 +17,8 @@ router.post('/addList', authMiddleware, createList);
 router.get('/fetchAllList', getAllLists);
 
 router.get('/fetchSingleList/:id', getListById);
+
+router.get('/fetchListsByTeam', getListsByTeam);
 
 router.put('/updateList/:id', authMiddleware, updateList);
 

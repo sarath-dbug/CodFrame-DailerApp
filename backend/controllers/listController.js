@@ -59,6 +59,44 @@ const getListById = async (req, res) => {
 };
 
 
+const getListsByTeam = async (req, res) => {
+    try {
+      const { teamId } = req.query; 
+  
+      if (!teamId) {
+        return res.status(400).json({
+          success: false,
+          message: 'Team ID is required',
+        });
+      }
+  
+      const team = await Team.findById(teamId).populate('lists');
+      if (!team) {
+        return res.status(404).json({
+          success: false,
+          message: 'Team not found',
+        });
+      }
+  
+      // Extract the populated lists
+      const lists = team.lists;
+  
+      res.status(200).json({
+        success: true,
+        message: 'Lists fetched successfully for the team',
+        data: lists,
+      });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({
+        success: false,
+        message: 'Server error',
+        error: err.message,
+      });
+    }
+  };
+
+
 // Update a list
 const updateList = async (req, res) => {
     const { name } = req.body;
@@ -130,6 +168,7 @@ module.exports = {
     createList,
     getAllLists,
     getListById,
+    getListsByTeam,
     updateList,
     deleteList,
     emptyList,
