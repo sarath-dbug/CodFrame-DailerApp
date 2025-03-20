@@ -8,6 +8,7 @@ const listRoutes = require('./routes/listRoutes');
 const memberRoutes = require('./routes/memberRoutes');
 const teamRouter = require('./routes/teamRouter');
 const callRoutes = require('./routes/callRoutes');
+const attendanceRouter = require('./routes/attendanceRouter');
 
 dotenv.config();
 
@@ -27,6 +28,7 @@ app.use('/api/lists', listRoutes);
 app.use('/api/member', memberRoutes);
 app.use('/api/team', teamRouter);
 app.use('/api/call', callRoutes);
+app.use('/api/attendance', attendanceRouter);
 
 
 app.get('/', (req,res)=>{
