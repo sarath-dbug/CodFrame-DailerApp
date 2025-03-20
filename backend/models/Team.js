@@ -7,6 +7,11 @@ const teamSchema = new mongoose.Schema({
         trim: true,
         unique: true
     },
+    userId: {
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: 'User', 
+        required: true, 
+    },
     assignedTo: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Member',
