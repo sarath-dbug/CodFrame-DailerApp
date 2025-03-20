@@ -260,6 +260,47 @@ const getAllMembersInTeam = async (req, res) => {
 
 
 
+// update member is login/logout in mobile app
+const updateLoginStatus = async (req, res) => {
+  try {
+    const { memberId, isLoggedIn } = req.body;
+
+    if (!memberId || typeof isLoggedIn !== "boolean") {
+      return res.status(400).json({ success: false, message: "Invalid input data" });
+    }
+
+    const updatedMember = await Member.findByIdAndUpdate(
+      memberId,
+      {
+        isLoggedIn,
+        lastActivity: Date.now(),
+      },
+      { new: true } // Ensures it returns the updated document
+    );
+
+    if (!updatedMember) {
+      return res.status(404).json({ success: false, message: "Member not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Member login status updated to ${isLoggedIn ? "logged in" : "logged out"}`,
+      data: updatedMember,
+    });
+  } catch (error) {
+    console.error("Error updating login status:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to update login status",
+      error: error.message,
+    });
+  }
+};
+
+
+
+
+
 module.exports = {
   createMember,
   getAllMembers,
@@ -269,5 +310,6 @@ module.exports = {
   updateMember,
   exportMembers,
   getListsByMember,
-  getAllMembersInTeam
+  getAllMembersInTeam,
+  updateLoginStatus
 }

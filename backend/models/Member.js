@@ -39,6 +39,15 @@ const memberSchema = new mongoose.Schema({
         required: true,
         trim: true,
     },
+    isLoggedIn: {
+        type: Boolean,
+        required: true,
+        default: false, 
+      },
+      lastActivity: {
+        type: Date,
+        default: Date.now, 
+      },
     createdAt: {
         type: Date,
         default: Date.now,

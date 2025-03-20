@@ -8,7 +8,8 @@ const {
     updateMember,
     exportMembers,
     getListsByMember,
-    getAllMembersInTeam
+    getAllMembersInTeam,
+    updateLoginStatus
 } = require("../controllers/memberController");
 const authMiddleware = require("../middleware/authMiddleware");
 
@@ -31,5 +32,8 @@ router.get('/exportMembers', exportMembers);
 router.get('/fetchListsByMember/:memberId', getListsByMember);
 
 router.get('/fetchAllMembersInTeam', getAllMembersInTeam);
+
+router.post('/updateLoginStatus', updateLoginStatus);
+
 
 module.exports = router;
