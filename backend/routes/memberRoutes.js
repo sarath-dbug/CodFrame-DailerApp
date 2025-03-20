@@ -7,7 +7,8 @@ const {
     deleteAllMembers,
     updateMember,
     exportMembers,
-    getListsByMember
+    getListsByMember,
+    getAllMembersInTeam
 } = require("../controllers/memberController");
 const authMiddleware = require("../middleware/authMiddleware");
 
@@ -28,5 +29,7 @@ router.put('/updateMember/:memberId', authMiddleware, updateMember);
 router.get('/exportMembers', exportMembers);
 
 router.get('/fetchListsByMember/:memberId', getListsByMember);
+
+router.get('/fetchAllMembersInTeam', getAllMembersInTeam);
 
 module.exports = router;
