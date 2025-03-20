@@ -7,65 +7,62 @@ const { Parser } = require('json2csv');
 
 // Create a member
 const createMember = async (req, res) => {
-    let { name, email, userId, password, role, team, phone } = req.body;
-
+    const { name, email, userId, password, role, team, phone } = req.body;
+  
     try {
-        // Check if the member already exists
-        const existingMember = await Member.findOne({ email });
-        if (existingMember) {
-            return res.status(400).json({ msg: 'Member with this email already exists' });
+      const existingMember = await Member.findOne({ email });
+      if (existingMember) {
+        return res.status(400).json({ msg: 'Member with this email already exists' });
+      }
+  
+      // Ensure team is an array
+      let teamIds = team;
+      if (typeof team === 'string') {
+        teamIds = [team]; 
+      }
+  
+      if (!Array.isArray(teamIds)) {
+        return res.status(400).json({ msg: 'Team must be an array or string' });
+      }
+  
+      // Validate team IDs
+      for (const teamId of teamIds) {
+        const teamDoc = await Team.findById(teamId);
+        if (!teamDoc) {
+          return res.status(400).json({ msg: `Team with ID '${teamId}' not found` });
         }
-
-        // Ensure team is an array
-        if (typeof team === 'string') {
-            team = [team]; // Convert single string to an array
-        }
-
-        if (!Array.isArray(team)) {
-            return res.status(400).json({ msg: 'Team must be an array or string' });
-        }
-
-        // Find team IDs based on team names
-        const teamIds = [];
-        for (const teamName of team) {
-            const teamDoc = await Team.findOne({ name: teamName.trim() });
-            if (!teamDoc) {
-                return res.status(400).json({ msg: `Team '${teamName}' not found` });
-            }
-            teamIds.push(teamDoc._id);
-        }
-
-        // Create a new member
-        const newMember = new Member({
-            name,
-            email,
-            userId,
-            password,
-            role,
-            team: teamIds, // Store team IDs instead of team names
-            phone,
-        });
-
-        await newMember.save();
-
-        // Update assignedTo in Team model
-        for (const teamId of teamIds) {
-            await Team.findByIdAndUpdate(
-                teamId,
-                { 
-                    $addToSet: { assignedTo: newMember._id }, // Add member ID if not already present
-                    updatedAt: new Date() // Update timestamp
-                },
-                { new: true } // Return the updated document
-            );
-        }
-
-        res.status(201).json({ msg: 'Member created successfully', member: newMember });
+      }
+  
+      const newMember = new Member({
+        name,
+        email,
+        userId,
+        password,
+        role,
+        team: teamIds,
+        phone,
+      });
+  
+      await newMember.save();
+  
+      // Update assignedTo in Team model
+      for (const teamId of teamIds) {
+        await Team.findByIdAndUpdate(
+          teamId,
+          { 
+            $addToSet: { assignedTo: newMember._id }, 
+            updatedAt: new Date() 
+          },
+          { new: true } 
+        );
+      }
+  
+      res.status(201).json({ msg: 'Member created successfully', member: newMember });
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ msg: 'Server error', error: err.message });
+      console.error(err);
+      res.status(500).json({ msg: 'Server error', error: err.message });
     }
-};
+  };
 
 
 
