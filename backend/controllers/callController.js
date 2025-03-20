@@ -1,5 +1,5 @@
-const Call = require('../models/Call'); 
-const Team = require('../models/Team'); 
+const Call = require('../models/Call');
+const Team = require('../models/Team');
 
 // store a call response from front-end
 const storeCallResponse = async (req, res) => {
@@ -18,6 +18,7 @@ const storeCallResponse = async (req, res) => {
       notes,
       list,
       team,
+      memberId, 
       template,
       recording,
     } = req.body;
@@ -32,36 +33,36 @@ const storeCallResponse = async (req, res) => {
       dialer,
       calledReceivedBy,
       disposition,
-      remarks,
-      notes,
+      remarks: remarks?.trim() || "",
+      notes: notes?.trim() || "",
       list,
       team,
-      template,
-      recording,
+      memberId, 
+      template: template?.trim() || "",
+      recording: recording?.trim() || "",
     });
 
     await newCallResponse.save();
 
     res.status(201).json({
-      success: true,
-      message: 'Call response stored successfully',
+      message: "Call response stored successfully",
       data: newCallResponse,
     });
   } catch (error) {
-    console.error('Error storing call response:', error);
+    console.error("Error storing call response:", error);
     res.status(500).json({
-      success: false,
-      message: 'Failed to store call response',
+      message: "Failed to store call response",
       error: error.message,
     });
   }
 };
 
 
+
 // Fetching all call responses for a specific team
 const getAllCallResponses = async (req, res) => {
   try {
-    const { teamId } = req.query; 
+    const { teamId } = req.query;
 
     if (!teamId) {
       return res.status(400).json({
@@ -100,7 +101,7 @@ const getAllCallResponses = async (req, res) => {
 };
 
 
-module.exports = { 
+module.exports = {
   storeCallResponse,
   getAllCallResponses
 };

@@ -52,14 +52,19 @@ const callResponseSchema = new mongoose.Schema({
     trim: true,
   },
   list: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'List',
     required: true,
-    trim: true,
   },
   team: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Team',
     required: true,
-    trim: true,
+  },
+  memberId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Member',
+    required: true,
   },
   template: {
     type: String,
