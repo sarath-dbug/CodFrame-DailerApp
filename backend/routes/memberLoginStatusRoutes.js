@@ -1,8 +1,13 @@
 const express = require('express');
-const { updateLoginStatus } = require('../controllers/memberLoginStatusController');
+const {
+    updateLoginStatus,
+    getLoggedInMembersByTeam
+} = require('../controllers/memberLoginStatusController');
 
 const router = express.Router();
 
 router.post('/update-login-status', updateLoginStatus);
+
+router.get('/fetchAllLoggedInMembers', getLoggedInMembersByTeam);
 
 module.exports = router;

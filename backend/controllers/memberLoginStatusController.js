@@ -10,9 +10,9 @@ const updateLoginStatus = async (req, res) => {
       { memberId },
       {
         isLoggedIn,
-        lastActivity: Date.now(), 
+        lastActivity: Date.now(),
       },
-      { upsert: true, new: true } 
+      { upsert: true, new: true }
     );
 
     res.status(200).json({
@@ -30,4 +30,43 @@ const updateLoginStatus = async (req, res) => {
   }
 };
 
-module.exports = { updateLoginStatus };
+
+const getLoggedInMembersByTeam = async (req, res) => {
+  try {
+    const { teamId } = req.query;
+
+    if (!teamId) {
+      return res.status(400).json({ success: false, message: "Team ID is required" });
+    }
+
+    // Find all logged-in members
+    const loggedInMembers = await MemberLoginStatus.find({ isLoggedIn: true })
+      .populate({
+        path: "memberId",
+        select: "name email team", // Fetch only necessary fields
+      });
+
+    // Filter members belonging to the specified team
+    const filteredMembers = loggedInMembers.filter(member => 
+      member.memberId && member.memberId.team.includes(teamId)
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Logged-in members fetched successfully for the team",
+      data: filteredMembers,
+    });
+  } catch (error) {
+    console.error("Error fetching logged-in members by team:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch logged-in members",
+      error: error.message,
+    });
+  }
+};
+
+module.exports = {
+  updateLoginStatus,
+  getLoggedInMembersByTeam
+};
