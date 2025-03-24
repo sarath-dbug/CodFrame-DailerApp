@@ -35,7 +35,13 @@ const getTeamsByUser = async (req, res) => {
 
     const teams = await Team.find({ userId });
 
-    res.status(200).json({ message: 'Teams fetched successfully for the user', data: teams });
+    // Format the createdAt date for each team
+    const formattedTeams = teams.map((team) => ({
+      ...team._doc, 
+      createdAt: new Date(team.createdAt).toLocaleDateString("en-US"), // Formats to MM/DD/YYYY
+    }));
+
+    res.status(200).json({ message: 'Teams fetched successfully for the user', data: formattedTeams });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error', error: err.message });
