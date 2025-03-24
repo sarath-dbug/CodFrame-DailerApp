@@ -69,8 +69,7 @@ const deleteTeam = async (req, res) => {
 
 
 const editTeam = async (req, res) => {
-  const { teamId } = req.params;
-  const { name } = req.body;
+  const { name, teamId } = req.body;
 
   try {
 

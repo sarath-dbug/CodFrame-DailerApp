@@ -15,6 +15,6 @@ router.get('/fetchTeamsByUser', getTeamsByUser);
 
 router.delete('/deleteTeam/:teamId', authMiddleware, deleteTeam);
 
-router.put('/editTeam/:teamId', authMiddleware, editTeam);
+router.put('/editTeam', authMiddleware, editTeam);
 
 module.exports = router;
