@@ -4,13 +4,13 @@ const User = require('../models/User');
 
 // Register User
 const registerUser = async (req, res) => {
-    const { firstName, lastName, companyName, email, password } = req.body;
+    const { firstName, lastName, companyName,contactNumber, email, password } = req.body;
 
     try {
         let user = await User.findOne({ email });
         if (user) return res.status(400).json({ msg: 'User already exists' });
 
-        user = new User({ firstName, lastName, companyName, email, password });
+        user = new User({ firstName, lastName, companyName,contactNumber, email, password });
 
         const salt = await bcrypt.genSalt(10);
         user.password = await bcrypt.hash(password, salt);
@@ -27,6 +27,7 @@ const registerUser = async (req, res) => {
                 firstName: user.firstName,
                 lastName: user.lastName,
                 companyName: user.companyName,
+                contactNumber: user.contactNumber,
                 email: user.email,
                 createdAt: user.createdAt,
                 updatedAt: user.updatedAt,
@@ -61,6 +62,7 @@ const loginUser = async (req, res) => {
                 firstName: user.firstName,
                 lastName: user.lastName,
                 companyName: user.companyName,
+                contactNumber: user.contactNumber,
                 email: user.email,
                 createdAt: user.createdAt,
                 updatedAt: user.updatedAt,
