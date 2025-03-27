@@ -69,18 +69,41 @@ const createMember = async (req, res) => {
 // Fetch all members
 const getAllMembers = async (req, res) => {
   try {
-    const members = await Member.find().select('-password'); // Exclude the password field
+    const members = await Member.find()
+      .select('-password')
+      .populate('team', 'name');
 
     if (members.length === 0) {
       return res.status(404).json({ msg: 'No members found' });
     }
 
-    res.status(200).json(members);
+    const memberIds = members.map((member) => member._id);
+    const lists = await List.find(
+      { assignedTo: { $in: memberIds } },
+      { name: 1, assignedTo: 1 } // Only fetch name and assignedTo fields
+    );
+
+    const membersWithLists = members.map((member) => {
+      const memberLists = lists
+        .filter((list) => list.assignedTo?.toString() === member._id.toString())
+        .map(list => list.name); // Only include list names
+        
+      const teamNames = member.team.map(team => team.name); // Only include team names
+
+      return {
+        ...member.toObject(),
+        team: teamNames, // array of strings
+        lists: memberLists // array of strings
+      };
+    });
+
+    res.status(200).json(membersWithLists);
   } catch (err) {
     console.error(err);
     res.status(500).json({ msg: 'Server error', error: err.message });
   }
 };
+
 
 
 // Change password
