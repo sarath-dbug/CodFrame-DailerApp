@@ -108,31 +108,29 @@ const getAllMembers = async (req, res) => {
 
 // Change password
 const changePassword = async (req, res) => {
-  const { userId, oldPassword, newPassword } = req.body;
+  const { userId, newPassword } = req.body;
 
   try {
     const member = await Member.findOne({ userId });
     if (!member) {
-      return res.status(404).json({ msg: 'Member not found' });
+      return res.status(404).json({ msg: "Member not found" });
     }
 
-    const isMatch = await bcrypt.compare(oldPassword, member.password);
-    if (!isMatch) {
-      return res.status(400).json({ msg: 'Incorrect old password' });
-    }
-
+    // Hash the new password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(newPassword, salt);
 
+    // Update password
     member.password = hashedPassword;
     await member.save();
 
-    res.status(200).json({ msg: 'Password changed successfully' });
+    res.status(200).json({ msg: "Password updated successfully" });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ msg: 'Server error', error: err.message });
+    res.status(500).json({ msg: "Server error", error: err.message });
   }
 };
+
 
 
 // Delete a member
