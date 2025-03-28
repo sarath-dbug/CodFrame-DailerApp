@@ -27,7 +27,7 @@ const memberSchema = new mongoose.Schema({
     role: {
         type: String,
         required: true,
-        enum: ['team manager', 'sub manager', 'agent'],
+        enum: ['Team Manager', 'Sub Manager', 'Agent'],
     },
     team: {
         type: [mongoose.Schema.Types.ObjectId],
