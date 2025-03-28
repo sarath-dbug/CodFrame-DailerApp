@@ -172,7 +172,7 @@ const deleteAllMembers = async (req, res) => {
 // Update member details
 const updateMember = async (req, res) => {
   try {
-    const { name, email, role, team, phone } = req.body;
+    const { name, phone} = req.body;
     const { memberId } = req.params;
 
     const member = await Member.findById(memberId);
@@ -181,9 +181,6 @@ const updateMember = async (req, res) => {
     }
 
     if (name) member.name = name;
-    if (email) member.email = email;
-    if (role) member.role = role;
-    if (team) member.team = Array.isArray(team) ? team.map(t => t.trim()) : team;
     if (phone) member.phone = phone;
 
     member.updatedAt = Date.now();
