@@ -143,16 +143,14 @@ const uploadContactsFromCSV = async (req, res) => {
   }
 };
 
-// Helper function to format phone numbers with country code
-const formatPhoneNumber = (phoneNumber, countryCode) => {
-  if (!phoneNumber) return ''; 
 
-  // Parse the phone number
+const formatPhoneNumber = (phoneNumber, countryCode) => {
+  if (!phoneNumber) return '';
+
   const parsedNumber = parsePhoneNumberFromString(phoneNumber, countryCode);
 
-  // If the phone number is valid, format it with the country code
   if (parsedNumber && parsedNumber.isValid()) {
-    return parsedNumber.formatInternational(); // Format as international number
+    return `+${parsedNumber.countryCallingCode}${parsedNumber.nationalNumber}`;
   }
 
   return phoneNumber;

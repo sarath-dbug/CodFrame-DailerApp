@@ -32,7 +32,7 @@ const contactSchema = new mongoose.Schema({
   },
   disposition: { 
     type: String, 
-    enum: ['NEW', 'CONTACTED', 'FOLLOW_UP', 'COMPLETED', 'MISSED'], 
+    enum: ['SKIP', 'CONTACTED', 'QUALIFIED', 'NEW', 'WRONG NUMBER', 'INTERESTED', 'UNREACHABLE', 'NOT INTERESTED'], 
     default: 'NEW' 
   },
   address: { 
