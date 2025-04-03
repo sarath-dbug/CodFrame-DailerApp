@@ -65,24 +65,62 @@ const uploadContactsFromCSV = async (req, res) => {
     return res.status(400).json({ msg: 'No file uploaded' });
   }
 
-  const { listId, countryCode = 'IN' } = req.body; // Default country code is 'IN' (India)
+  const { listId, countryCode = 'IN' } = req.body;
   if (!listId) {
     return res.status(400).json({ msg: 'List ID is required' });
   }
 
-  const contacts = [];
   const filePath = req.file.path;
   const fileExtension = path.extname(filePath).toLowerCase();
 
   try {
+    let contacts = [];
+    const existingNumbers = new Set();
+
+    // First pass: collect all existing numbers in the list
+    const existingContacts = await Contact.find({ list: listId }, { number: 1 });
+    existingContacts.forEach(contact => existingNumbers.add(contact.number));
+
     if (fileExtension === '.csv') {
-      // Handle CSV files
-      fs.createReadStream(filePath)
-        .pipe(csv())
-        .on('data', (row) => {
-          const contact = {
-            number: formatPhoneNumber(row.number, countryCode), // Add country code
-            secondaryNumber: formatPhoneNumber(row.secondaryNumber || '', countryCode), // Add country code
+      await new Promise((resolve, reject) => {
+        fs.createReadStream(filePath)
+          .pipe(csv())
+          .on('data', (row) => {
+            const formattedNumber = formatPhoneNumber(row.number, countryCode);
+            if (!existingNumbers.has(formattedNumber)) {
+              contacts.push({
+                number: formattedNumber,
+                secondaryNumber: formatPhoneNumber(row.secondaryNumber || '', countryCode),
+                name: row.name,
+                companyName: row.companyName || '',
+                email: row.email || '',
+                dealValue: row.dealValue ? parseFloat(row.dealValue) : 0,
+                leadScore: row.leadScore ? parseInt(row.leadScore) : 0,
+                disposition: row.disposition || 'NEW',
+                address: row.address || '',
+                extra: row.extra || '',
+                remarks: row.remarks || '',
+                note: row.note || '',
+                list: listId,
+              });
+              existingNumbers.add(formattedNumber); // Add to set to prevent duplicates in same file
+            }
+          })
+          .on('end', resolve)
+          .on('error', reject);
+      });
+    } else if (fileExtension === '.xlsx') {
+      const workbook = xlsx.readFile(filePath);
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+      const rows = xlsx.utils.sheet_to_json(sheet);
+
+      rows.forEach((row) => {
+        const formattedNumber = formatPhoneNumber(row.number, countryCode);
+        if (!existingNumbers.has(formattedNumber)) {
+          contacts.push({
+            number: formattedNumber,
+            secondaryNumber: formatPhoneNumber(row.secondaryNumber || '', countryCode),
             name: row.name,
             companyName: row.companyName || '',
             email: row.email || '',
@@ -94,49 +132,32 @@ const uploadContactsFromCSV = async (req, res) => {
             remarks: row.remarks || '',
             note: row.note || '',
             list: listId,
-          };
-          contacts.push(contact);
-        })
-        .on('end', async () => {
-          await Contact.insertMany(contacts);
-          res.status(201).json({ msg: 'Contacts uploaded successfully', contacts });
-        });
-    } else if (fileExtension === '.xlsx') {
-      // Handle Excel files
-      const workbook = xlsx.readFile(filePath);
-      const sheetName = workbook.SheetNames[0];
-      const sheet = workbook.Sheets[sheetName];
-      const rows = xlsx.utils.sheet_to_json(sheet);
-
-      rows.forEach((row) => {
-        const contact = {
-          number: formatPhoneNumber(row.number, countryCode),
-          secondaryNumber: formatPhoneNumber(row.secondaryNumber || '', countryCode), 
-          name: row.name,
-          companyName: row.companyName || '',
-          email: row.email || '',
-          dealValue: row.dealValue ? parseFloat(row.dealValue) : 0,
-          leadScore: row.leadScore ? parseInt(row.leadScore) : 0,
-          disposition: row.disposition || 'NEW',
-          address: row.address || '',
-          extra: row.extra || '',
-          remarks: row.remarks || '',
-          note: row.note || '',
-          list: listId,
-        };
-        contacts.push(contact);
+          });
+          existingNumbers.add(formattedNumber);
+        }
       });
-
-      await Contact.insertMany(contacts);
-      res.status(201).json({ msg: 'Contacts uploaded successfully', contacts });
     } else {
       return res.status(400).json({ msg: 'Invalid file type. Only CSV and Excel files are allowed.' });
     }
+
+    if (contacts.length > 0) {
+      await Contact.insertMany(contacts);
+      return res.status(201).json({ 
+        msg: `Successfully added ${contacts.length} contacts`,
+        addedCount: contacts.length,
+        duplicatesSkipped: existingContacts.length - contacts.length
+      });
+    } else {
+      return res.status(200).json({ 
+        msg: 'No new contacts to add (all were duplicates)',
+        addedCount: 0,
+        duplicatesSkipped: existingContacts.length
+      });
+    }
   } catch (err) {
     console.error(err);
-    res.status(500).json({ msg: 'Server error', error: err.message });
+    return res.status(500).json({ msg: 'Server error', error: err.message });
   } finally {
-    // Delete the uploaded file after processing
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
     }
@@ -366,6 +387,30 @@ const assignContactsFromListToMember = async (req, res) => {
 };
 
 
+// Remove & Update assigned Member from list and contacts
+const removeAssignment = async (req, res) => {
+  try {
+    const { listId, memberId } = req.body;
+
+    if (!listId || !memberId) {
+      return res.status(400).json({ msg: 'List ID and Member ID are required' });
+    }
+
+    await List.findByIdAndUpdate(listId, { $set: { assignedTo: null } });
+
+    await Contact.updateMany(
+      { list: listId },
+      { $set: { assignedTo: null } }
+    );
+
+    res.status(200).json({ msg: 'Assignment cleared successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: 'Server error', error: err.message });
+  }
+};
+
+
 module.exports = {
   createContact,
   uploadContactsFromCSV,
@@ -373,5 +418,6 @@ module.exports = {
   getAllListContacts,
   exportContactsByList,
   exportAllContacts,
-  assignContactsFromListToMember
+  assignContactsFromListToMember,
+  removeAssignment
 }
